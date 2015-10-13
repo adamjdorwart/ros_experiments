@@ -70,14 +70,6 @@ class LowsheenOdometryPublisher(object):
             if self.gyro_start_time == 0:
                 self.gyro_start_time = now
 
-            odom_quat = tf.transformations.quaternion_from_euler(0, 0, heading)
-                                                                                     
-            # orientation
-            imu.orientation = Quaternion(*odom_quat)
-            imu.orientation_covariance[0] = np.finfo(np.float64).max
-            imu.orientation_covariance[4] = np.finfo(np.float64).max
-            imu.orientation_covariance[8] = 0.05
-
             degree_to_rad = math.pi / 180.0
              # Rate noise density @ 50Hz Bandwidth
             gyro_rnd = 0.011 # degree*sqrt(Hz)/sec
@@ -87,8 +79,8 @@ class LowsheenOdometryPublisher(object):
             gyro_variance = gyro_std * gyro_std
                                                                                      
             imu.angular_velocity.z = angular_velocity
-            imu.angular_velocity_covariance[0] = np.finfo(np.float64).max
-            imu.angular_velocity_covariance[4] = np.finfo(np.float64).max
+            imu.angular_velocity_covariance[0] = gyro_variance
+            imu.angular_velocity_covariance[4] = gyro_variance
             imu.angular_velocity_covariance[8] = gyro_variance
  
             # publish the data
@@ -148,9 +140,6 @@ class LowsheenOdometryPublisher(object):
             self.encoder_start_time = now
 
         encoders.twist.twist.linear.x = linear_velocity
-        encoders.twist.twist.linear.y = 0
-
-        encoders.twist.twist.angular.z = angular_velocity
 
         # Wheel encoder error density
         encoder_err = 0.02
@@ -158,8 +147,7 @@ class LowsheenOdometryPublisher(object):
         encoder_std = encoder_err * math.sqrt(encoder_time)
         encoder_variance = encoder_std * encoder_std
 
-        encoders.twist.covariance[0] = encoder_variance
-        encoders.twist.covariance[7] = encoder_variance
-        encoders.twist.covariance[35] = 0.4
+        #encoders.twist.covariance[0] = encoder_variance
+        encoders.twist.covariance[0] = 0.005
 
         self.wheel_pub.publish(encoders)
