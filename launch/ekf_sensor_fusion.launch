@@ -1,7 +1,8 @@
 <!-- Launch file for ekf_localization_node -->
 
 <launch>
-
+    <node pkg="tf" type="static_transform_publisher" name="gyro_link_tf"
+      args="0.46 0 0.44 0 0 0 base_link gyro_link 5"/>
     <!-- This node will take in measurements from odometry, IMU, stamped pose, and stamped twist messages. It tracks
          the state of the robot, with the state vector being defined as X position, Y position, Z position,
          roll, pitch, yaw, their respective velocites, and linear acceleration. Units for all measurements are assumed
@@ -14,7 +15,7 @@
            the filter will not begin computation until it receives at least one message from
            one of the inputs. It will then run continuously at the frequency specified here,
            regardless of whether it receives more measurements. Defaults to 30 if unspecified. -->
-      <param name="frequency" value="30"/>
+      <param name="frequency" value="110"/>
 
       <!-- The period, in seconds, after which we consider a sensor to have timed out. In this event, we
            carry out a predict cycle on the EKF without correcting it. This parameter can be thought of
@@ -75,17 +76,18 @@
            message types lack certain variables. For example, a TwistWithCovarianceStamped message has no pose information, so
            the first six values would be meaningless in that case. Each vector defaults to all false if unspecified, effectively
            making this parameter required for each sensor. -->
+
       <rosparam param="twist0_config">[false, false, false,
                                        false, false, false,
-                                       true,  true,  false,
+                                       true,  false,  false,
                                        false, false, false,
                                        false, false, false]</rosparam>
 
       <rosparam param="imu0_config">[false, false, false,
                                      false,  false,  false,
                                      false, false, false,
-                                     false,  false,  true,
-                                     false,  false,  false]</rosparam>
+                                     true,  true,  true,
+                                     true,  true,  true]</rosparam>
 
       <!-- The best practice for including new sensors in robot_localization's state estimation nodes is to pass in velocity
            measurements and let the nodes integrate them. However, this isn't always feasible, and so the state estimation
@@ -111,7 +113,7 @@
            that the relative parameter doesn't cause the measurement to be converted to a velocity before integrating it. If
            you simply want your measurements to start at 0 for a given sensor, set this to true. -->
       <!--param name="odom0_relative" value="false"/-->
-      <param name="pose0_relative" value="true"/>
+      <param name="twist0_relative" value="true"/>
       <param name="imu0_relative" value="true"/>
 
       <!-- If we're including accelerations in our state estimate, then we'll probably want to remove any acceleration that
@@ -139,10 +141,10 @@
            numeric_limits<double>::max() if unspecified. -->
       <param name="odom0_pose_rejection_threshold" value="5"/>
       <param name="odom0_twist_rejection_threshold" value="1"/>
-      <param name="twist0_rejection_threshold" value="100"/>
+      <!--param name="twist0_rejection_threshold" value="1.2"/>
       <param name="imu0_pose_rejection_threshold" value="0.3"/>
-      <param name="imu0_twist_rejection_threshold" value="100"/>
-      <param name="imu0_linear_acceleration_rejection_threshold" value="0.1"/>
+      <param name="imu0_twist_rejection_threshold" value="0.01"/>
+      <param name="imu0_linear_acceleration_rejection_threshold" value="0.1"/-->
 
       <!-- Debug settings. Not for the faint of heart. Outputs a ludicrous amount of information to the file
            specified by debug_out_file. I hope you like matrices! Defaults to false if unspecified. -->
