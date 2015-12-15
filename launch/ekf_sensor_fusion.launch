@@ -67,7 +67,9 @@
            parameters obviously have no default values, and must be specified. -->
       <!--param name="odom0" value="example/odom"/-->
       <param name="twist0" value="lowsheen/sensors/wheel_encoders"/>
-      <param name="imu0" value="lowsheen/sensors/imu"/>
+      <param name="bno_odom" value="lowsheen/odom_bno"/>
+      <param name="stm_odom" value="lowsheen/odom_stm"/>
+      <!--param name="imu0" value="lowsheen/sensors/imu"/>
 
       <!-- Each sensor reading updates some or all of the filter's state. These options give you greater control over
            which values from each measurement are fed to the filter. For example, if you have an odometry message as input,
@@ -83,11 +85,24 @@
                                        false, false, false,
                                        false, false, false]</rosparam>
 
-      <rosparam param="imu0_config">[false, false, false,
+      <rosparam param="bno_odom_config">[false, false, false,
+                                       false, false, true,
+                                       false,  false,  false,
+                                       false, false, false,
+                                       false, false, false]</rosparam>
+
+
+      <rosparam param="stm_odom_config">[false, false, false,
+                                       false, false, true,
+                                       false,  false,  false,
+                                       false, false, false,
+                                       false, false, false]</rosparam>
+
+      <!--rosparam param="imu0_config">[false, false, false,
                                      false,  false,  false,
                                      false, false, false,
                                      true,  true,  true,
-                                     true,  true,  true]</rosparam>
+                                     true,  true,  true]</rosparam-->
 
       <!-- The best practice for including new sensors in robot_localization's state estimation nodes is to pass in velocity
            measurements and let the nodes integrate them. However, this isn't always feasible, and so the state estimation
@@ -106,7 +121,10 @@
            this is acceptable. For orientation variables, it can lead to trouble. Users should make sure that all orientation
            variables have at least one source of absolute measurement. -->
       <!--param name="odom0_differential" value="false"/-->
-      <param name="imu0_differential" value="false"/>
+      <!--param name="imu0_differential" value="false"/--->
+      <param name="bno_odom_differential" value="true"/>
+      <param name="stm_odom_differential" value="true"/>
+
 
       <!-- When the node starts, if this parameter is true, then the first measurement is treated as a "zero point" for all
            future measurements. While you can achieve the same effect with the differential paremeter, the key difference is
@@ -114,11 +132,12 @@
            you simply want your measurements to start at 0 for a given sensor, set this to true. -->
       <!--param name="odom0_relative" value="false"/-->
       <param name="twist0_relative" value="true"/>
-      <param name="imu0_relative" value="true"/>
+      <param name="bno_odom_relative" value="true"/>
+      <param name="stm_odom_relative" value="true"/>
 
       <!-- If we're including accelerations in our state estimate, then we'll probably want to remove any acceleration that
            is due to gravity for each IMU. If you don't want to, then set this to false. Defaults to false if unspecified. -->
-      <param name="imu0_remove_gravitational_acceleration" value="true"/>
+      <!--param name="imu0_remove_gravitational_acceleration" value="true"/-->
 
       <!-- If you're having trouble, try setting this to true, and then echo the /diagnostics_agg topic to see
            if the node is unhappy with any settings or data. -->
@@ -132,9 +151,9 @@
 
       <!-- By default, the subscription queue size for each message type is 1. If you wish to increase that so as not
            miss any messages (even if your frequency is set to a relatively small value), increase these. -->
-      <param name="odom0_queue_size" value="5"/>
+      <param name="bno_odom_queue_size" value="10"/>
       <param name="twist0_queue_size" value="5"/>
-      <param name="imu0_queue_size" value="10"/>
+      <param name="stm_odom_queue_size" value="10"/>
 
       <!-- If your data is subject to outliers, use these threshold settings, expressed as Mahalanobis distances, to control
            how far away from the current vehicle state a sensor measurement is permitted to be. Each defaults to

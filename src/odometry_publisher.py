@@ -33,7 +33,8 @@ class LowsheenOdometryPublisher(object):
         self.odometry_estimator = LowsheenOdometryEstimator(
             wheel_radius=0.1651, wheel_base=0.635, ticks_per_revolution=40000, use_imu_heading=True)
 
-        self.odom_pub = rospy.Publisher('/lowsheen/odom', Odometry, queue_size=10)
+        self.odom_pub_stm = rospy.Publisher('/lowsheen/odom_stm', Odometry, queue_size=10)
+        self.odom_pub_bno = rospy.Publisher('/lowsheen/odom_bno', Odometry, queue_size=10)
         self.imu_pub = rospy.Publisher('/lowsheen/sensors/imu', Imu, queue_size=10)
         self.wheel_pub = rospy.Publisher('/lowsheen/sensors/wheel_encoders', TwistWithCovarianceStamped, queue_size=10)
         self.odom_broadcaster = tf.TransformBroadcaster()
@@ -99,34 +100,38 @@ class LowsheenOdometryPublisher(object):
         publish the odom information 
         (values based on kobuki odometry publishing kobiki_node/src/library/odometry.cpp)
         '''
-        odom = Odometry()
-        odom.header.stamp = rospy.Time.now()
-        odom.header.frame_id = self.odom_frame
-        odom.child_frame_id = self.base_frame
+        odom_stm = Odometry()
+        odom_bno = Odometry()
+        odom_bno.header.stamp = odom_stm.header.stamp = rospy.Time.now()
+        odom_bno.header.frame_id = odom_stm.header.frame_id = self.odom_frame
+        odom_bno.child_frame_id = odom_stm.child_frame_id = self.base_frame
 
         # position
-        odom_quat = tf.transformations.quaternion_from_euler(0, 0, heading)
-        odom.pose.pose.position.x = x
-        odom.pose.pose.position.y = y
-        odom.pose.pose.position.z = 0.
-        odom.pose.pose.orientation = Quaternion(*odom_quat)
+        odom_stm_quat = tf.transformations.quaternion_from_euler(0, 0, heading)
+        odom_bno_quat = tf.transformations.quaternion_from_euler(0, 0, angular_velocity)
+        odom_bno.pose.pose.position.x = odom_stm.pose.pose.position.x = x
+        odom_bno.pose.pose.position.y = odom_stm.pose.pose.position.y = y
+        odom_bno.pose.pose.position.z = odom_stm.pose.pose.position.z = 0.
+        odom_stm.pose.pose.orientation = Quaternion(*odom_stm_quat)
+        odom_bno.pose.pose.orientation = Quaternion(*odom_bno_quat)
 
         # velocity
         # x, y switch to follow ros convention 
-        odom.twist.twist.linear.x = linear_velocity
-        odom.twist.twist.linear.y = 0.
-        odom.twist.twist.angular.z = angular_velocity
+        odom_bno.twist.twist.linear.x = odom_stm.twist.twist.linear.x = linear_velocity
+        odom_bno.twist.twist.linear.y = odom_stm.twist.twist.linear.y = 0.
+        odom_bno.twist.twist.angular.z = odom_stm.twist.twist.angular.z = 0. # angular_velocity
 
         # Pose covariance (required by robot_pose_ekf)
-        odom.pose.covariance[0] = 0.1
-        odom.pose.covariance[7] = 0.1
-        odom.pose.covariance[35] = self.pose_covariance
+        odom_bno.pose.covariance[0] = odom_stm.pose.covariance[0] = 0.1
+        odom_bno.pose.covariance[7] = odom_stm.pose.covariance[7] = 0.1
+        odom_bno.pose.covariance[35] = odom_stm.pose.covariance[35] = self.pose_covariance
 
-        odom.pose.covariance[14] = np.finfo(np.float64).max  # set a non-zero covariance on unused
-        odom.pose.covariance[21] = np.finfo(np.float64).max  # dimensions (z, pitch and roll); this
-        odom.pose.covariance[28] = np.finfo(np.float64).max  # is a requirement of robot_pose_ekf
+        odom_bno.pose.covariance[14] = odom_stm.pose.covariance[14] = np.finfo(np.float64).max  # set a non-zero covariance on unused
+        odom_bno.pose.covariance[21] = odom_stm.pose.covariance[21] = np.finfo(np.float64).max  # dimensions (z, pitch and roll); this
+        odom_bno.pose.covariance[28] = odom_stm.pose.covariance[28] = np.finfo(np.float64).max  # is a requirement of robot_pose_ekf
  
-        self.odom_pub.publish(odom)
+        self.odom_pub_stm.publish(odom_stm)
+        self.odom_pub_bno.publish(odom_bno)
 
     def publish_wheel_encoders(self, heading, linear_velocity, angular_velocity):
         '''
