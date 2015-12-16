@@ -15,7 +15,7 @@ import math
 from geometry_msgs.msg import Pose2D, TwistWithCovarianceStamped, TransformStamped, Quaternion
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu, JointState
-from lowsheen_lib.odom_estimator import LowsheenOdometryEstimator
+from odom_estimator import LowsheenOdometryEstimator
 
 
 
@@ -56,7 +56,7 @@ class LowsheenOdometryPublisher(object):
             self.publish_wheel_encoders(odometery_estimate[2], odometery_estimate[3], odometery_estimate[4])
             #self.publish_imu(mule_state, odometery_estimate[2], odometery_estimate[4])
 
-            self.publish_transform(odometery_estimate[0], odometery_estimate[1], odometery_estimate[2], odometery_estimate[4])
+            #self.publish_transform(odometery_estimate[0], odometery_estimate[1], odometery_estimate[2], odometery_estimate[4])
 
 
 
@@ -88,21 +88,21 @@ class LowsheenOdometryPublisher(object):
             # publish the data
             self.imu_pub.publish(imu)
 
-    def publish_transform(self, x, y, heading, angular_velocity):
+    def publish_transform(self, x, y, heading, angular_velocity, bno_x, bno_y):
         stm_odom_quat = tf.transformations.quaternion_from_euler(0, 0, heading)
         self.stm_odom_broadcaster.sendTransform(translation=(x, y, 0.0),
                                             rotation=stm_odom_quat,
                                             time=rospy.Time.now(),
-                                            child=self.base_frame,
-                                            parent=(self.odom_frame+"_stm"))
+                                            child=self.base_frame+"_stm",
+                                            parent=self.odom_frame)
         bno_odom_quat = tf.transformations.quaternion_from_euler(0, 0, angular_velocity)
-        self.bno_odom_broadcaster.sendTransform(translation=(x, y, 0.0),
+        self.bno_odom_broadcaster.sendTransform(translation=(bno_x, bno_y, 0.0),
                                             rotation=bno_odom_quat,
                                             time=rospy.Time.now(),
-                                            child=self.base_frame,
-                                            parent=(self.odom_frame+"_bno"))
+                                            child=self.base_frame+"_bno",
+                                            parent=self.odom_frame)
 
-    def publish_odometry(self, x, y, heading, linear_velocity, angular_velocity):
+    def publish_odometry(self, x, y, heading, linear_velocity, angular_velocity, bno_x, bno_y):
         '''
         publish the odom information 
         (values based on kobuki odometry publishing kobiki_node/src/library/odometry.cpp)
@@ -110,15 +110,17 @@ class LowsheenOdometryPublisher(object):
         odom_stm = Odometry()
         odom_bno = Odometry()
         odom_bno.header.stamp = odom_stm.header.stamp = rospy.Time.now()
-        odom_bno.header.frame_id = self.odom_frame + "_bno"
-        odom_stm.header.frame_id = self.odom_frame + "_stm"
-        odom_bno.child_frame_id = odom_stm.child_frame_id = self.base_frame
+        odom_bno.header.frame_id = odom_stm.header.frame_id = self.odom_frame
+        odom_bno.child_frame_id = self.base_frame + "_stm"
+        odom_stm.child_frame_id = self.base_frame + "_bno"
 
         # position
         odom_stm_quat = tf.transformations.quaternion_from_euler(0, 0, heading)
         odom_bno_quat = tf.transformations.quaternion_from_euler(0, 0, angular_velocity)
-        odom_bno.pose.pose.position.x = odom_stm.pose.pose.position.x = x
-        odom_bno.pose.pose.position.y = odom_stm.pose.pose.position.y = y
+        odom_bno.pose.pose.position.x = bno_x
+        odom_stm.pose.pose.position.x = x
+        odom_bno.pose.pose.position.y = bno_y
+        odom_stm.pose.pose.position.y = y
         odom_bno.pose.pose.position.z = odom_stm.pose.pose.position.z = 0.
         odom_stm.pose.pose.orientation = Quaternion(*odom_stm_quat)
         odom_bno.pose.pose.orientation = Quaternion(*odom_bno_quat)

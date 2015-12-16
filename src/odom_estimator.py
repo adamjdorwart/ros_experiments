@@ -72,6 +72,7 @@ class LowsheenOdometryEstimator(object):
         self.position_ticks = np.array([0, 0], dtype='int')
         self.last_encoder_ticks = None
         self.x, self.y, self.heading = 0., 0., 0.
+        self.bno_x, self.bno_y = 0., 0.
         self._bad_angular_velocity_estimate_counter = 0
 
     def process_mule_state(self, mule_state):
@@ -120,6 +121,9 @@ class LowsheenOdometryEstimator(object):
             self.x = self.x + ds*math.cos(self.heading)
             self.y = self.y + ds*math.sin(self.heading)
 
+            self.bno_x = self.bno_x + ds*math.cos(angular_velocity)
+            self.bno_y = self.bno_y + ds*math.sin(angular_velocity)
+
             linear_velocity = ds/delta_timestamp
 
             # update the state
@@ -127,7 +131,7 @@ class LowsheenOdometryEstimator(object):
             self.position_ticks += delta_encoder_ticks
             self.last_encoder_ticks = motor_encoders
 
-            return self.x, self.y, self.heading, linear_velocity, angular_velocity
+            return self.x, self.y, self.heading, linear_velocity, angular_velocity, self.bno_x, self.bno_y
 
     def _detect_encoders_and_gyro_deviations(self, encoders_angular_velocity, imu_angular_velocity):
             if abs(encoders_angular_velocity - imu_angular_velocity) > 0.1:
