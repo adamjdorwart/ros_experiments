@@ -1,8 +1,10 @@
 <!-- Launch file for ekf_localization_node -->
 
 <launch>
-    <node pkg="tf" type="static_transform_publisher" name="gyro_link_tf"
-      args="0.46 0 0.44 0 0 0 base_link gyro_link 5"/>
+    <!--node pkg="tf" type="static_transform_publisher" name="gyro_link_bno_tf"
+      args="0.46 0 0.44 0 0 0 base_link gyro_link_bno 100"/>
+    <node pkg="tf" type="static_transform_publisher" name="gyro_link_stm_tf"
+      args="0.46 0 0.44 0 0 0 base_link gyro_link_stm 100"/-->
     <!-- This node will take in measurements from odometry, IMU, stamped pose, and stamped twist messages. It tracks
          the state of the robot, with the state vector being defined as X position, Y position, Z position,
          roll, pitch, yaw, their respective velocites, and linear acceleration. Units for all measurements are assumed
@@ -85,16 +87,16 @@
                                        false, false, false,
                                        false, false, false]</rosparam-->
 
-      <rosparam param="odom0_config">[true, true, false,
+      <rosparam param="odom0_config">[false, false, false,
                                        false, false, true,
-                                       false,  false, false,
+                                       true,  false, false,
                                        false, false, false,
                                        false, false, false]</rosparam>
 
 
-      <rosparam param="odom1_config">[true, true, false,
+      <rosparam param="odom1_config">[false, false, false,
                                        false, false, true,
-                                       false,  false, false,
+                                       true,  false, false,
                                        false, false, false,
                                        false, false, false]</rosparam>
 
@@ -122,8 +124,8 @@
            variables have at least one source of absolute measurement. -->
       <!--param name="odom0_differential" value="false"/-->
       <!--param name="imu0_differential" value="false"/-->
-      <param name="odom0_differential" value="true"/>
-      <param name="odom1_differential" value="true"/>
+      <param name="odom0_differential" value="false"/>
+      <param name="odom1_differential" value="false"/>
 
 
       <!-- When the node starts, if this parameter is true, then the first measurement is treated as a "zero point" for all
@@ -131,7 +133,7 @@
            that the relative parameter doesn't cause the measurement to be converted to a velocity before integrating it. If
            you simply want your measurements to start at 0 for a given sensor, set this to true. -->
       <!--param name="odom0_relative" value="false"/-->
-      <param name="twist0_relative" value="true"/>
+      <!--param name="twist0_relative" value="true"/-->
       <param name="odom0_relative" value="true"/>
       <param name="odom1_relative" value="true"/>
 
@@ -152,14 +154,14 @@
       <!-- By default, the subscription queue size for each message type is 1. If you wish to increase that so as not
            miss any messages (even if your frequency is set to a relatively small value), increase these. -->
       <param name="odom0_queue_size" value="10"/>
-      <param name="twist0_queue_size" value="5"/>
+      <!--param name="twist0_queue_size" value="5"/-->
       <param name="odom1_queue_size" value="10"/>
 
       <!-- If your data is subject to outliers, use these threshold settings, expressed as Mahalanobis distances, to control
            how far away from the current vehicle state a sensor measurement is permitted to be. Each defaults to
            numeric_limits<double>::max() if unspecified. -->
-      <param name="odom0_pose_rejection_threshold" value="5"/>
-      <param name="odom0_twist_rejection_threshold" value="1"/>
+      <!--param name="odom0_pose_rejection_threshold" value="5"/-->
+      <!--param name="odom0_twist_rejection_threshold" value="1"/-->
       <!--param name="twist0_rejection_threshold" value="1.2"/>
       <param name="imu0_pose_rejection_threshold" value="0.3"/>
       <param name="imu0_twist_rejection_threshold" value="0.01"/>

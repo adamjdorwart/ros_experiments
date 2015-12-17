@@ -56,7 +56,7 @@ class LowsheenOdometryPublisher(object):
             self.publish_wheel_encoders(odometery_estimate[2], odometery_estimate[3], odometery_estimate[4])
             #self.publish_imu(mule_state, odometery_estimate[2], odometery_estimate[4])
 
-            #self.publish_transform(odometery_estimate[0], odometery_estimate[1], odometery_estimate[2], odometery_estimate[4])
+            #self.publish_transform(odometery_estimate[0], odometery_estimate[1], odometery_estimate[2], odometery_estimate[4], odometery_estimate[5], odometery_estimate[6])
 
 
 
@@ -93,14 +93,14 @@ class LowsheenOdometryPublisher(object):
         self.stm_odom_broadcaster.sendTransform(translation=(x, y, 0.0),
                                             rotation=stm_odom_quat,
                                             time=rospy.Time.now(),
-                                            child=self.base_frame+"_stm",
-                                            parent=self.odom_frame)
+                                            child="gyro_link_stm",
+                                            parent=self.base_frame)
         bno_odom_quat = tf.transformations.quaternion_from_euler(0, 0, angular_velocity)
         self.bno_odom_broadcaster.sendTransform(translation=(bno_x, bno_y, 0.0),
                                             rotation=bno_odom_quat,
                                             time=rospy.Time.now(),
-                                            child=self.base_frame+"_bno",
-                                            parent=self.odom_frame)
+                                            child="gyro_link_bno",
+                                            parent=self.base_frame)
 
     def publish_odometry(self, x, y, heading, linear_velocity, angular_velocity, bno_x, bno_y):
         '''
@@ -110,9 +110,8 @@ class LowsheenOdometryPublisher(object):
         odom_stm = Odometry()
         odom_bno = Odometry()
         odom_bno.header.stamp = odom_stm.header.stamp = rospy.Time.now()
-        odom_bno.header.frame_id = odom_stm.header.frame_id = self.odom_frame
-        odom_bno.child_frame_id = self.base_frame + "_stm"
-        odom_stm.child_frame_id = self.base_frame + "_bno"
+        odom_bno.header.frame_id = self.base_frame
+        odom_stm.header.frame_id = self.base_frame
 
         # position
         odom_stm_quat = tf.transformations.quaternion_from_euler(0, 0, heading)
@@ -136,9 +135,11 @@ class LowsheenOdometryPublisher(object):
         odom_bno.pose.covariance[7] = odom_stm.pose.covariance[7] = 0.1
         odom_bno.pose.covariance[35] = odom_stm.pose.covariance[35] = self.pose_covariance
 
-        odom_bno.pose.covariance[14] = odom_stm.pose.covariance[14] = np.finfo(np.float64).max  # set a non-zero covariance on unused
-        odom_bno.pose.covariance[21] = odom_stm.pose.covariance[21] = np.finfo(np.float64).max  # dimensions (z, pitch and roll); this
-        odom_bno.pose.covariance[28] = odom_stm.pose.covariance[28] = np.finfo(np.float64).max  # is a requirement of robot_pose_ekf
+        odom_bno.twist.covariance[0] = odom_stm.twist.covariance[0] = 0.005
+
+        #odom_bno.pose.covariance[14] = odom_stm.pose.covariance[14] = np.finfo(np.float64).max  # set a non-zero covariance on unused
+        #odom_bno.pose.covariance[21] = odom_stm.pose.covariance[21] = np.finfo(np.float64).max  # dimensions (z, pitch and roll); this
+        #odom_bno.pose.covariance[28] = odom_stm.pose.covariance[28] = np.finfo(np.float64).max  # is a requirement of robot_pose_ekf
  
         self.odom_pub_stm.publish(odom_stm)
         self.odom_pub_bno.publish(odom_bno)
